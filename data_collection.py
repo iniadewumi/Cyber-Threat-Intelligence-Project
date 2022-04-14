@@ -5,6 +5,7 @@ import pandas as pd
 import pathlib
 from kaggle.api.kaggle_api_extended import KaggleApi
 from datetime import datetime
+from io import StringIO
 
 ROOT = pathlib.Path().resolve()
 DATA = ROOT / 'Data'
@@ -12,9 +13,8 @@ AUTH = ROOT / 'kaggle.json'
 CSV = DATA / 'CSVs'
 ZIPS = DATA / 'Zip'
 MALIC = CSV / 'Malicious Datasets'
-MALW = CSV / 'Maware Datasets'
+MALW = CSV / 'Malware Datasets'
 DAILY_MALWARE = MALW /'DAILY'
-
 
 class Downloader:
     def __init__(self):
@@ -60,7 +60,18 @@ class Downloader:
         with zipfile.ZipFile(from_path, 'r') as f:
             f.extractall(to_path)
         return print(f"Extracted zip content to ./{'/'.join(from_path.parts[-3:])}")
-  
+
+    def extract_git_data(self):
+        resp = requests.get('https://raw.githubusercontent.com/faizann24/Using-machine-learning-to-detect-malicious-URLs/master/data/data.csv')
+        other = pd.read_csv(StringIO(resp.text), names=['url', 'type'])
+        other.type.replace({"bad":"malware", "good":"benign"}, inplace=True)
+
+        resp2 = requests.get('https://raw.githubusercontent.com/faizann24/Using-machine-learning-to-detect-malicious-URLs/master/data/data2.csv')
+        other2 = pd.read_csv(StringIO(resp2.text), names=['url', 'type'])
+        other2.type.replace({"bad":"malware", "good":"benign"}, inplace=True)
+        self.df = pd.concat([self.df, other, other2])  
+        self.df.drop_duplicates('url', inplace=True)
+        
     def download(self):
         for key in self.urls:
             filename  = DAILY_MALWARE/f'{key} ({self.today}).csv'
@@ -74,6 +85,12 @@ class Downloader:
             
         if self.get_malicious_dataset():
             self.unzip(self.zip_file, MALIC)
+        print("\n\nExtracting Git Data...")
+        self.df = pd.read_csv(MALIC/'malicious_phish.csv')
+        self.extract_git_data()
+        print("Success, GIT data joined to DF")
+        self.df.to_csv(MALIC/'malicious_phish.csv', index=False)
+    
         print("\n\nSuccessfully downloaded and extracted data")
 if __name__ == '__main__':
     m = Downloader()

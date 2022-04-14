@@ -9,8 +9,10 @@ import seaborn as sns
 ROOT = pathlib.Path().resolve()
 DATA = ROOT / 'Data'
 CSV = DATA / 'CSVs'
+MALIC = CSV / 'Malicious Datasets'
 
-
+malwdf = pd.read_csv(MALIC/'processed_dataframe.csv')
+    
 
 df = pd.read_csv(CSV/'processed_dataframe.csv')
 

@@ -7,20 +7,25 @@ from tld import get_tld, is_tld
 import string
 from ip_re import ip_re, short_re
 from urllib.parse import urlparse
-
+from io import StringIO
+import requests
 
 ROOT = pathlib.Path().resolve()
 DATA = ROOT / 'Data'
 CSV = DATA / 'CSVs'
 MALIC = CSV / 'Malicious Datasets'
 
+
+
 class Preprocessor:
     def __init__(self):
         self.df = pd.read_csv(MALIC/'malicious_phish.csv')
+        self.df = self.df[self.df.type != 'label']
         print(f"\nMissing Data Check:\n{self.df.isnull().sum()}")
-        print(f'\n\nDataset desription {self.df.describe()}')
+        print(f'\n\nDataset desription \n{self.df.describe()}')
         types = self.df['type'].value_counts()
-        plt.bar(types.index, height=types, color=['red', 'blue', 'purple', 'navy'])
+        plt.bar(types.index, height=types, color=['navy',  'blue', 'purple', 'red'])
+
 
 
     # get_tld(x, as_object = True, fail_silently=False,fix_protocol=True)

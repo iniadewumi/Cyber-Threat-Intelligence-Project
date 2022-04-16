@@ -66,12 +66,14 @@ class Preprocessor:
             self.df[c] = self.df['url'].apply(lambda i: i.count(c))
 
         desc = self.df.describe().T['mean']
-        new_cols = ['url', 'type', 'scheme', 'domain', 'path', 'normal', "contains_ip", "is_shortened"] + list(desc[desc >0.01].index )
+        new_cols = ['url', 'type', 'scheme', 'domain', 'path', 'normal', 'digits', 'letters', "contains_ip", "is_shortened"] + list(desc[desc >0.01].index )
         self.df = self.df[new_cols]
         self.save_df()
         
     def save_df(self):
         self.df.to_csv(MALIC/'processed_dataframe.csv', index=False)
+        self.df.to_csv(MALIC/'processed_dataframe.csv.zip', index=False, compression="zip")
+        
 
 if __name__ == '__main__':
     prep = Preprocessor()

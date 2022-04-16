@@ -11,10 +11,10 @@ DATA = ROOT / 'Data'
 CSV = DATA / 'CSVs'
 MALIC = CSV / 'Malicious Datasets'
 
-malwdf = pd.read_csv(MALIC/'processed_dataframe.csv')
+df = pd.read_csv(MALIC/'processed_dataframe.csv')
     
 
-df = pd.read_csv(CSV/'processed_dataframe.csv')
+# df = pd.read_csv(CSV/'processed_dataframe.csv')
 
 y_dense = LabelBinarizer().fit_transform(df['type'])
 y_sparse = sparse.csr_matrix(y_dense)

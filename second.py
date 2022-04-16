@@ -41,7 +41,7 @@ class MalwareCollector:
             filename  = DAILY_MALWARE/f'{key} ({self.today}).csv'
             if filename not in DAILY_MALWARE.iterdir():
                 df = self.retriever(key)
-                df.drop_duplicates(inplace=True)
+                # df.drop_duplicates(inplace=True)
                 df.to_csv(filename, index=False)
                 print(f"Downloaded and saved file {filename.name}")
                 continue
@@ -54,6 +54,7 @@ class MalwareCollector:
             full_df = pd.read_csv(DAILY_MALWARE.parent / f'all_{key}.csv')
             full_df = pd.concat([df, full_df])
             full_df.drop_duplicates(inplace=True)
+            print(f"Updated the compilation all_{key}")
             full_df.to_csv(DAILY_MALWARE.parent / f'all_{key}.csv', index=False)
     
     
@@ -63,31 +64,33 @@ if __name__ == '__main__':
     malcol.loop()
     
 
-for key in malcol.urls:
-    rep = pd.DataFrame(columns=['Column Name', 'Description', 'count', 'unique', 'top', 'freq', 'mean', 'std', 'min', '25%', '50%', '75%', 'max'])
-    filename  = DAILY_MALWARE/f'{key} ({malcol.today}).csv'
-    df = pd.read_csv(filename)
-    df['url'] = df['url'].astype(str)
-    head = df.head()
-    for col in df.columns:
-        head[col] = head[col].astype(str)[:20]
+
+# for key in malcol.urls:
+    
+#     rep = pd.DataFrame(columns=['Column Name', 'Description', 'count', 'unique', 'top', 'freq', 'mean', 'std', 'min', '25%', '50%', '75%', 'max'])
+#     filename  = DAILY_MALWARE/f'{key} ({malcol.today}).csv'
+#     df = pd.read_csv(filename)
+#     df['url'] = df['url'].astype(str)
+#     head = df.head()
+#     for col in df.columns:
+#         head[col] = head[col].astype(str)[:20]
         
     
-    df[df['url'].str.len()>10].head().to_csv(f'{key}.csv', index=False)
+#     df[df['url'].str.len()>10].head().to_csv(f'{key}.csv', index=False)
     
     
     
-    rep["Column Name"] = df.columns 
-    rep['Description'] = list(df.dtypes)
+#     rep["Column Name"] = df.columns 
+#     rep['Description'] = list(df.dtypes)
     
     
-    for i, row in rep.iterrows():
-        desc = df[row['Column Name']].describe()
-        rep.at[i, desc.index] = desc
-    rep.rename(columns = {'count':'Non-Null Count', 'unique':'Distinct Count', 'min':'Min.','max':"Max.", 'mean':'Avg.', "std":'Std. Dev.'}, inplace=True)
-    rep = rep[['Column Name','Description', 'Non-Null Count', 'Distinct Count', 'Min.', 'Max.', 'Avg.', 'Std. Dev.']]
+#     for i, row in rep.iterrows():
+#         desc = df[row['Column Name']].describe()
+#         rep.at[i, desc.index] = desc
+#     rep.rename(columns = {'count':'Non-Null Count', 'unique':'Distinct Count', 'min':'Min.','max':"Max.", 'mean':'Avg.', "std":'Std. Dev.'}, inplace=True)
+#     rep = rep[['Column Name','Description', 'Non-Null Count', 'Distinct Count', 'Min.', 'Max.', 'Avg.', 'Std. Dev.']]
     
-    rep.to_csv(f'{key}.csv', index=False)
+#     rep.to_csv(f'{key}.csv', index=False)
     
     
 

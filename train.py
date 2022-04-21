@@ -28,12 +28,12 @@ MALIC = CSV / 'Malicious Datasets'
 MODELS = DATA / "Models"
 
 try:
-    fdf = pd.read_csv(MALIC/'processed_dataframe.csv')
+    df = pd.read_csv(MALIC/'processed_dataframe.csv')
 except:
-    fdf = pd.read_csv(MALIC/'processed_dataframe.csv.zip')
+    df = pd.read_csv(MALIC/'processed_dataframe.csv.zip')
     
 
-df = fdf[:100]
+
 
 
 
@@ -54,28 +54,25 @@ types = y
 
 kf = KFold(n_splits=3)
 
-outer_results = list()
-best_list = list()
+outer_results = []
+best_list = []
 
 for train_index, test_index in kf.split(X):
     # print("TRAIN:", train_index, "TEST:", test_index)
     X_train, X_test = X.loc[train_index], X.loc[test_index]
     y_train, y_test = y.loc[train_index], y.loc[test_index]
 
-   
+
     cv_inner = KFold(n_splits=3, shuffle=True, random_state=1)
     # define the model
     model = RandomForestClassifier(random_state=1)
-    
+
     # define search space
-    space = dict()
-    space['n_estimators'] = [10, 50, 200]
-    space['max_features'] = [2, 4, 6]
-    
+    space = {'n_estimators': [10, 50, 200], 'max_features': [2, 4, 6]}
     # define search
     search = GridSearchCV(model, space, scoring='accuracy', cv=cv_inner, refit=True, verbose=True)
     result = search.fit(X_train, y_train)
-    
+
     # get the best performing model fit on the whole training set
     best_model = result.best_estimator_
     yhat = best_model.predict(X_test)
@@ -95,6 +92,8 @@ print(b_model)
 
 with open(MODELS/"random_forest.pickle", "wb") as f:
     pickle.dump(b_model, f)
+
+
 # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=111)
 
 # estimator = RandomForestClassifier(n_estimators=200)

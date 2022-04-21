@@ -27,7 +27,13 @@ CSV = DATA / 'CSVs'
 MALIC = CSV / 'Malicious Datasets'
 MODELS = DATA / "Models"
 
-df = pd.read_csv(MALIC/'processed_dataframe.csv')
+try:
+    fdf = pd.read_csv(MALIC/'processed_dataframe.csv')
+except:
+    fdf = pd.read_csv(MALIC/'processed_dataframe.csv.zip')
+    
+
+df = fdf[:100]
 
 
 
@@ -43,12 +49,13 @@ X = df.drop(['url', 'type',  'domain'], axis=1)
 y = df['type']
 
 types = y
-plt.bar(types.index, height=types, color=['navy',  'blue', 'purple', 'red'])
+# plt.bar(types.index, height=types, color=['navy',  'blue', 'purple', 'red'])
 
 
-kf = KFold(n_splits=5)
+kf = KFold(n_splits=3)
 
 outer_results = list()
+best_list = list()
 
 for train_index, test_index in kf.split(X):
     # print("TRAIN:", train_index, "TEST:", test_index)
@@ -58,11 +65,11 @@ for train_index, test_index in kf.split(X):
    
     cv_inner = KFold(n_splits=3, shuffle=True, random_state=1)
     # define the model
-    model = RandomForestClassifier(random_state=1, verbose=True)
+    model = RandomForestClassifier(random_state=1)
     
     # define search space
     space = dict()
-    space['n_estimators'] = [10, 100, 500]
+    space['n_estimators'] = [10, 50, 200]
     space['max_features'] = [2, 4, 6]
     
     # define search
@@ -76,14 +83,18 @@ for train_index, test_index in kf.split(X):
     acc = accuracy_score(y_test, yhat)
     # store the result
     outer_results.append(acc)
+    best_list.append(best_model)
     # report progress
-    print('acc=%.3f, est=%.3f, cfg=%s' % (acc, result.best_score_, result.best_params_))
+    print('\n\n\nacc=%.3f, est=%.3f, cfg=%s' % (acc, result.best_score_, result.best_params_))
 # summarize the estimated performance of the model
 print('Accuracy: %.3f (%.3f)' % (mean(outer_results), std(outer_results)))
 
+b_model = best_list[outer_results.index(max(outer_results))]
+
+print(b_model)
 
 with open(MODELS/"random_forest.pickle", "wb") as f:
-    pickle.dump(best_model, f)
+    pickle.dump(b_model, f)
 # X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=111)
 
 # estimator = RandomForestClassifier(n_estimators=200)

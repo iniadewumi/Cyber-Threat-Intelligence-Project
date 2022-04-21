@@ -1,2 +1,4 @@
 /MISC
 processed_dataframe.csv
+*.pickle
+del.json

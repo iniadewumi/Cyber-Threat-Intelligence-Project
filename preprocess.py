@@ -34,6 +34,7 @@ class Preprocessor:
         plt.bar(types.index, height=types, color=['navy',  'blue', 'purple', 'red'])
 
 
+
     def target_encode(self, var, target):
         print(f"Target Encoding {var}...")
         encoder = ce.OneHotEncoder()
@@ -56,9 +57,10 @@ class Preprocessor:
         try:
             res = get_tld(url, as_object = True, fail_silently=False,fix_protocol=True)
             domain = res.parsed_url.netloc
-            scheme = res.parsed_url.scheme
             path =   len(res.parsed_url.path)
-            normal = 0 if re.search(str(urlparse(url).hostname), url) else 1
+            p2 = urlparse(url)
+            scheme = p2.scheme
+            normal = 0 if re.search(str(p2.hostname), url) else 1
             tld = res.tld
 
         except Exception:
@@ -85,23 +87,39 @@ class Preprocessor:
 
         print("Extracting URL components...")
         self.df[['scheme', 'domain', 'path', "normal", "digits", "letters", "contains_ip", "is_shortened", 'tld_normal']] = self.df['url'].apply(lambda url: self.extract_domain(url)).tolist()
-
+        
+        print("Encoding categorical values...")  
+        self.df['scheme'] = self.df['scheme'].apply(lambda x: x if len(x)<6 and x!="" else 'http').replace({'\x87':"http", '½\x134+':"http", 'ºE':"http", 'WY':"http", '?':"http"})
+        
+        # self.df['tld_normal'].value_counts(normalize=True).to_dict()
+        # self.df['scheme'].value_counts(normalize=True).to_dict()
+        
+        
+        self.df['enc_tld_normal'] = self.df['tld_normal'].replace(self.df['tld_normal'].value_counts(normalize=True).to_dict())
+        self.df['enc_scheme'] = self.df['scheme'].replace(self.df['scheme'].value_counts(normalize=True).to_dict())
+        
+        
         print("\nFinding secure links...")
         self.df['secure'] = self.df['scheme'].apply(lambda x: 1 if x=='https' else 0)
+        
+        self.df.drop(['scheme', 'tld_normal'], axis=1, inplace=True)
+        
 
         print("Finding and counting special characters\n")
         for c in list(string.punctuation)+["//"]:
             self.df[c] = self.df['url'].apply(lambda i: i.count(c))
 
         desc = self.df.describe().T['mean']
-        new_cols = ['url', 'type', 'scheme', 'domain', 'path', 'normal', 'digits', 'letters', "contains_ip", "is_shortened", 'tld_normal'] + list(desc[desc >0.01].index )
-        self.df = self.df[new_cols]
+        self.df['symbol_count'] = self.df[list(string.punctuation)+["//"]].sum(axis=1)
+        new_cols = ['url', 'type',  'domain', 'path', 'normal', 'digits', 'letters', "contains_ip", "is_shortened",'enc_tld_normal', 'enc_scheme', 'symbol_count'] + list(desc[desc >0.05].index )
         
-        self.target_encode('tld_normal', 'type')
-        self.target_encode('scheme', 'type')
+        self.df = self.df[new_cols].loc[:,~self.df.columns.duplicated()]
+        
+        self.df.drop_duplicates(inplace=True)
         self.save_df()
         
     def save_df(self):
+        print("Saving regular and compressed versions of the dataframe")
         self.df.to_csv(MALIC/'processed_dataframe.csv', index=False)
         self.df.to_csv(MALIC/'processed_dataframe.csv.zip', index=False, compression="zip")
         
@@ -110,7 +128,9 @@ if __name__ == '__main__':
     prep = Preprocessor()
     prep.workflow()
     print("\n\nSuccessfully Completed preprocessing!\nReady for training\n\n")
-    
+
+
+
 """
 What is the definition of Monte Carlo Simulation?
 What are the parameters and plausible range of different random number generators (distributions)?
@@ -129,3 +149,10 @@ How does inverse transformation work for generating random variates? What are it
 How to simulate based on the output of input analysis?
 
 """
+
+
+
+# ce.CountEncoder(), ce.OrdinalEncoder()
+
+
+    
